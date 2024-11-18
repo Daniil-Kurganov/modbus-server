@@ -1,4 +1,4 @@
-module modbus-server
+module github.com/Daniil-Kurganov/modbus-server
 
 go 1.22.4
 
