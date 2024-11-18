@@ -23,7 +23,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			for {
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
-				log.Printf("Current bytes read: %d", bytesRead	)
+				log.Printf("Current bytes read: %d", bytesRead)
 				if err != nil {
 					if err != io.EOF {
 						log.Printf("read error %v\n", err)
@@ -37,6 +37,8 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					return
 				}
 				log.Printf("Current frame: %v", frame)
+				conn.Write([]byte{1, 0, 1})
+				return
 				request := &Request{conn, frame}
 				s.requestChan <- request
 			}
