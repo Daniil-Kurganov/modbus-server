@@ -36,9 +36,6 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					log.Printf("bad packet error %v\n", err)
 					return
 				}
-				log.Printf("Current frame: %v", frame)
-				conn.Write([]byte{1, 0, 1})
-				return
 				request := &Request{conn, frame}
 				s.requestChan <- request
 			}
