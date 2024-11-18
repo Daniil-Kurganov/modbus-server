@@ -34,7 +34,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					log.Printf("bad packet error %v\n", err)
 					return
 				}
-
+				log.Printf("Current frame: %v", frame)
 				request := &Request{conn, frame}
 
 				s.requestChan <- request
@@ -43,8 +43,8 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 	}
 }
 
-func (s *Server) ListenRTUOverTCP(port string) (err error) {
-	listen, err := net.Listen("tcp", port)
+func (s *Server) ListenRTUOverTCP(addressPort string) (err error) {
+	listen, err := net.Listen("tcp", addressPort)
 	if err != nil {
 		log.Printf("Failed to Listen: %v\n", err)
 		return err
