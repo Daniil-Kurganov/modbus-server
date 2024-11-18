@@ -2,7 +2,6 @@
 package modbusserver
 
 import (
-	"io"
 	"log"
 	"net"
 	"sync"
@@ -28,7 +27,8 @@ type Server struct {
 
 // Request contains the connection and Modbus frame.
 type Request struct {
-	conn  io.ReadWriteCloser
+	// conn  io.ReadWriteCloser
+	conn  net.Conn
 	frame Framer
 }
 
