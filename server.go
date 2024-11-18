@@ -90,6 +90,7 @@ func (s *Server) handle(request *Request) Framer {
 func (s *Server) handler() {
 	for {
 		request := <-s.requestChan
+		log.Printf("Current request: %v", request)
 		response := s.handle(request)
 		request.conn.Write(response.Bytes())
 	}
