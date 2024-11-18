@@ -3,6 +3,7 @@ package modbusserver
 
 import (
 	"io"
+	"log"
 	"net"
 	"sync"
 
@@ -81,7 +82,7 @@ func (s *Server) handle(request *Request) Framer {
 	if exception != &Success {
 		response.SetException(exception)
 	}
-
+	log.Printf("Current response: %v", response)
 	return response
 }
 

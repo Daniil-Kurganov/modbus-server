@@ -17,7 +17,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
-		log.Print("Currentconnection successfully done")
+		log.Print("Current connection successfully done")
 		go func(conn net.Conn) {
 			defer conn.Close()
 			for {
@@ -38,7 +38,6 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 				}
 				log.Printf("Current frame: %v", frame)
 				request := &Request{conn, frame}
-
 				s.requestChan <- request
 			}
 		}(conn)
