@@ -1,5 +1,5 @@
 // Package mbserver implments a Modbus server (slave).
-package mbserver
+package modbusserver
 
 import (
 	"io"

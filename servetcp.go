@@ -1,4 +1,4 @@
-package mbserver
+package modbusserver
 
 import (
 	"crypto/tls"

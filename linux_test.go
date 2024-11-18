@@ -1,6 +1,6 @@
 // +build linux
 
-package mbserver
+package modbusserver
 
 import (
 	"log"
