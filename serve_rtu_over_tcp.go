@@ -17,11 +17,13 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
+		log.Print("Currentconnection successfully done")
 		go func(conn net.Conn) {
 			defer conn.Close()
 			for {
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
+				log.Printf("Current bytes read: %d", bytesRead)
 				if err != nil {
 					if err != io.EOF {
 						log.Printf("read error %v\n", err)
@@ -50,6 +52,7 @@ func (s *Server) ListenRTUOverTCP(addressPort string) (err error) {
 		return err
 	}
 	s.listeners = append(s.listeners, listen)
+	log.Print("Start listening")
 	go s.acceptRTUOverTCP(listen)
 	return err
 }
