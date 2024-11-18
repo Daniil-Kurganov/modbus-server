@@ -2,6 +2,7 @@
 package modbusserver
 
 import (
+	"io"
 	"log"
 	"net"
 	"sync"
@@ -27,8 +28,7 @@ type Server struct {
 
 // Request contains the connection and Modbus frame.
 type Request struct {
-	// conn  io.ReadWriteCloser
-	conn  net.Conn
+	conn  io.ReadWriteCloser
 	frame Framer
 }
 
@@ -90,9 +90,10 @@ func (s *Server) handle(request *Request) Framer {
 func (s *Server) handler() {
 	for {
 		request := <-s.requestChan
-		log.Printf("Current request: %v", request)
-		response := s.handle(request)
-		request.conn.Write(response.Bytes())
+		// log.Printf("Current request: %v", request)
+		// response := s.handle(request)
+		request.conn.Write([]byte{1, 1, 1, 0})
+		// request.conn.Write(response.Bytes())
 	}
 }
 
