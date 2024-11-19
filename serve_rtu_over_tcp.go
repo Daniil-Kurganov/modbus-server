@@ -37,6 +37,10 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					return
 				}
 				request := &Request{conn, frame}
+
+				res := request.frame.Copy()
+				conn.Write(res.Bytes())
+
 				s.requestChan <- request
 			}
 		}(conn)
