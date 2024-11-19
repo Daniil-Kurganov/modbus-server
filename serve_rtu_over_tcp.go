@@ -19,12 +19,8 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 		}
 		log.Print("Current connection successfully done")
 		go func(conn net.Conn) {
-			// defer conn.Close()
+			defer conn.Close()
 			for {
-				if _, ok := <-s.requestChan; !ok {
-					conn.Close()
-					return
-				}
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
 				log.Printf("Current bytes read: %d", bytesRead)
@@ -41,9 +37,6 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					return
 				}
 				request := &Request{conn, frame}
-
-				// res := request.frame.Copy()
-				// conn.Write(res.Bytes())
 
 				s.requestChan <- request
 			}
