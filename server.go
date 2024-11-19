@@ -92,7 +92,9 @@ func (s *Server) handler() {
 		request := <-s.requestChan
 		log.Printf("Current request: %v", request)
 		response := s.handle(request)
-		request.conn.Write(response.Bytes())
+		if _, err := request.conn.Write(response.Bytes()); err != nil {
+			log.Printf("Error on writting request: %s", err)
+		}
 	}
 }
 
