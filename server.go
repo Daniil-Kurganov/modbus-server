@@ -3,6 +3,7 @@ package modbusserver
 
 import (
 	"io"
+	"log"
 	"net"
 	"sync"
 
@@ -81,7 +82,7 @@ func (s *Server) handle(request *Request) Framer {
 	if exception != &Success {
 		response.SetException(exception)
 	}
-
+	log.Printf("Current response: %v", response)
 	return response
 }
 
@@ -89,8 +90,11 @@ func (s *Server) handle(request *Request) Framer {
 func (s *Server) handler() {
 	for {
 		request := <-s.requestChan
+		log.Printf("Current request: %v", request)
 		response := s.handle(request)
-		request.conn.Write(response.Bytes())
+		if _, err := request.conn.Write(response.Bytes()); err != nil {
+			log.Printf("Error on writting request: %s", err)
+		}
 	}
 }
 
