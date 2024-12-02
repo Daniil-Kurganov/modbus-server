@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"strings"
+
+	reuse "github.com/libp2p/go-reuseport"
 )
 
 func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
@@ -45,7 +47,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 }
 
 func (s *Server) ListenRTUOverTCP(addressPort string) (err error) {
-	listen, err := net.Listen("tcp", addressPort)
+	listen, err := reuse.Listen("tcp", addressPort)
 	if err != nil {
 		log.Printf("Failed to Listen: %v\n", err)
 		return err
