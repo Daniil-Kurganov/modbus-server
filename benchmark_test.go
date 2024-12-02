@@ -140,6 +140,7 @@ func BenchmarkModbusRead125HoldingRegisters(b *testing.B) {
 func Example() {
 	// Start the server.
 	serv := NewServer()
+	serv.InitSlave(1)
 	err := serv.ListenTCP("127.0.0.1:1502")
 	if err != nil {
 		log.Printf("%v\n", err)
@@ -152,6 +153,7 @@ func Example() {
 
 	// Connect a client.
 	handler := modbus.NewTCPClientHandler("localhost:1502")
+	handler.SlaveId = 1
 	err = handler.Connect()
 	if err != nil {
 		log.Printf("%v\n", err)
@@ -159,7 +161,6 @@ func Example() {
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
-
 	// Write some registers.
 	_, err = client.WriteMultipleRegisters(0, 3, []byte{0, 3, 0, 4, 0, 5})
 	if err != nil {
@@ -195,7 +196,7 @@ func ExampleServer_RegisterFunctionHandler() {
 			}
 			data := make([]byte, 1+dataSize)
 			data[0] = byte(dataSize)
-			for i := range s.DiscreteInputs[register:endRegister] {
+			for i := range s.Slaves[frame.GetSlaveId()].DiscreteInputs[register:endRegister] {
 				// Return all 1s, regardless of the value in the DiscreteInputs array.
 				shift := uint(i) % 8
 				data[1+i/8] |= byte(1 << shift)
@@ -213,9 +214,10 @@ func ExampleServer_RegisterFunctionHandler() {
 
 	// Wait for the server to start
 	time.Sleep(1 * time.Millisecond)
-
+	serv.InitSlave(1)
 	// Connect a client.
 	handler := modbus.NewTCPClientHandler("localhost:4321")
+	handler.SlaveId = 1
 	err = handler.Connect()
 	if err != nil {
 		log.Printf("%v\n", err)

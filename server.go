@@ -98,7 +98,7 @@ func (s *Server) handler() {
 }
 
 func (s *Server) InitSlave(id uint8) {
-	if _, ok := s.Slaves[id]; !ok {
+	if _, ok := s.Slaves[id]; ok {
 		return
 	}
 	slave := SlaveData{}

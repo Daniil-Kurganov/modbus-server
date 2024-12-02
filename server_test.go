@@ -46,6 +46,7 @@ func TestUnsupportedFunction(t *testing.T) {
 func TestModbus(t *testing.T) {
 	// Server
 	s := NewServer()
+	s.InitSlave(1)
 	err := s.ListenTCP("127.0.0.1:3333")
 	if err != nil {
 		t.Fatalf("failed to listen, got %v\n", err)
@@ -57,6 +58,7 @@ func TestModbus(t *testing.T) {
 
 	// Client
 	handler := modbus.NewTCPClientHandler("127.0.0.1:3333")
+	handler.SlaveId = 1
 	// Connect manually so that multiple requests are handled in one connection session
 	err = handler.Connect()
 	if err != nil {
@@ -65,7 +67,6 @@ func TestModbus(t *testing.T) {
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
-
 	// Coils
 	results, err := client.WriteMultipleCoils(100, 9, []byte{255, 1})
 	if err != nil {
@@ -123,8 +124,8 @@ func TestModbus(t *testing.T) {
 	}
 
 	// Input registers
-	s.InputRegisters[65530] = 1
-	s.InputRegisters[65535] = 65535
+	s.Slaves[1].InputRegisters[65530] = 1
+	s.Slaves[1].InputRegisters[65535] = 65535
 	results, err = client.ReadInputRegisters(65530, 6)
 	if err != nil {
 		t.Errorf("expected nil, got %v\n", err)

@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package modbusserver
@@ -45,7 +46,7 @@ func TestModbusRTU(t *testing.T) {
 
 	// Allow the server to start and to avoid a connection refused on the client
 	time.Sleep(1 * time.Millisecond)
-
+	s.InitSlave(1)
 	// Client
 	handler := modbus.NewRTUClientHandler("ttyBAR")
 	handler.BaudRate = 115200
