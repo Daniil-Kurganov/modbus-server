@@ -16,7 +16,7 @@ func ReadCoils(s *Server, frame Framer) ([]byte, *Exception) {
 	}
 	data := make([]byte, 1+dataSize)
 	data[0] = byte(dataSize)
-	for i, value := range s.Coils[register:endRegister] {
+	for i, value := range s.Slaves[frame.GetSlaveId()].Coils[register:endRegister] {
 		if value != 0 {
 			shift := uint(i) % 8
 			data[1+i/8] |= byte(1 << shift)
@@ -37,7 +37,7 @@ func ReadDiscreteInputs(s *Server, frame Framer) ([]byte, *Exception) {
 	}
 	data := make([]byte, 1+dataSize)
 	data[0] = byte(dataSize)
-	for i, value := range s.DiscreteInputs[register:endRegister] {
+	for i, value := range s.Slaves[frame.GetSlaveId()].DiscreteInputs[register:endRegister] {
 		if value != 0 {
 			shift := uint(i) % 8
 			data[1+i/8] |= byte(1 << shift)
@@ -52,7 +52,7 @@ func ReadHoldingRegisters(s *Server, frame Framer) ([]byte, *Exception) {
 	if endRegister > 65536 {
 		return []byte{}, &IllegalDataAddress
 	}
-	return append([]byte{byte(numRegs * 2)}, Uint16ToBytes(s.HoldingRegisters[register:endRegister])...), &Success
+	return append([]byte{byte(numRegs * 2)}, Uint16ToBytes(s.Slaves[frame.GetSlaveId()].HoldingRegisters[register:endRegister])...), &Success
 }
 
 // ReadInputRegisters function 4, reads input registers from internal memory.
@@ -61,7 +61,7 @@ func ReadInputRegisters(s *Server, frame Framer) ([]byte, *Exception) {
 	if endRegister > 65536 {
 		return []byte{}, &IllegalDataAddress
 	}
-	return append([]byte{byte(numRegs * 2)}, Uint16ToBytes(s.InputRegisters[register:endRegister])...), &Success
+	return append([]byte{byte(numRegs * 2)}, Uint16ToBytes(s.Slaves[frame.GetSlaveId()].InputRegisters[register:endRegister])...), &Success
 }
 
 // WriteSingleCoil function 5, write a coil to internal memory.
@@ -71,14 +71,14 @@ func WriteSingleCoil(s *Server, frame Framer) ([]byte, *Exception) {
 	if value != 0 {
 		value = 1
 	}
-	s.Coils[register] = byte(value)
+	s.Slaves[frame.GetSlaveId()].Coils[register] = byte(value)
 	return frame.GetData()[0:4], &Success
 }
 
 // WriteHoldingRegister function 6, write a holding register to internal memory.
 func WriteHoldingRegister(s *Server, frame Framer) ([]byte, *Exception) {
 	register, value := registerAddressAndValue(frame)
-	s.HoldingRegisters[register] = value
+	s.Slaves[frame.GetSlaveId()].HoldingRegisters[register] = value
 	return frame.GetData()[0:4], &Success
 }
 
@@ -99,7 +99,7 @@ func WriteMultipleCoils(s *Server, frame Framer) ([]byte, *Exception) {
 	bitCount := 0
 	for i, value := range valueBytes {
 		for bitPos := uint(0); bitPos < 8; bitPos++ {
-			s.Coils[register+(i*8)+int(bitPos)] = bitAtPosition(value, bitPos)
+			s.Slaves[frame.GetSlaveId()].Coils[register+(i*8)+int(bitPos)] = bitAtPosition(value, bitPos)
 			bitCount++
 			if bitCount >= numRegs {
 				break
@@ -126,7 +126,7 @@ func WriteHoldingRegisters(s *Server, frame Framer) ([]byte, *Exception) {
 
 	// Copy data to memroy
 	values := BytesToUint16(valueBytes)
-	valuesUpdated := copy(s.HoldingRegisters[register:], values)
+	valuesUpdated := copy(s.Slaves[frame.GetSlaveId()].HoldingRegisters[register:], values)
 	if valuesUpdated == numRegs {
 		exception = &Success
 		data = frame.GetData()[0:4]

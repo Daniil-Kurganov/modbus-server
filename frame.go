@@ -6,6 +6,7 @@ import "encoding/binary"
 type Framer interface {
 	Bytes() []byte
 	Copy() Framer
+	GetSlaveId() uint8
 	GetData() []byte
 	GetFunction() uint8
 	SetException(exception *Exception)
@@ -26,7 +27,7 @@ func registerAddressAndNumber(frame Framer) (register int, numRegs int, endRegis
 	register = int(binary.BigEndian.Uint16(data[0:2]))
 	numRegs = int(binary.BigEndian.Uint16(data[2:4]))
 	endRegister = register + numRegs
-	return register, numRegs, endRegister
+	return
 }
 
 func registerAddressAndValue(frame Framer) (int, uint16) {

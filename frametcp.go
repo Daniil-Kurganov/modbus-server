@@ -59,6 +59,10 @@ func (frame *TCPFrame) Bytes() []byte {
 	return bytes
 }
 
+func (f *TCPFrame) GetSlaveId() uint8 {
+	return f.Device
+}
+
 // GetFunction returns the Modbus function code.
 func (frame *TCPFrame) GetFunction() uint8 {
 	return frame.Function

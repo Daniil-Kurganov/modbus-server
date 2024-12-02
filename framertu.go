@@ -7,7 +7,7 @@ import (
 
 // RTUFrame is the Modbus TCP frame.
 type RTUFrame struct {
-	Address  uint8
+	SlaveId  uint8
 	Function uint8
 	Data     []byte
 	CRC      uint16
@@ -29,7 +29,7 @@ func NewRTUFrame(packet []byte) (*RTUFrame, error) {
 	}
 
 	frame := &RTUFrame{
-		Address:  uint8(packet[0]),
+		SlaveId:  uint8(packet[0]),
 		Function: uint8(packet[1]),
 		Data:     packet[2 : pLen-2],
 	}
@@ -47,7 +47,7 @@ func (frame *RTUFrame) Copy() Framer {
 func (frame *RTUFrame) Bytes() []byte {
 	bytes := make([]byte, 2)
 
-	bytes[0] = frame.Address
+	bytes[0] = frame.SlaveId
 	bytes[1] = frame.Function
 	bytes = append(bytes, frame.Data...)
 
@@ -60,6 +60,10 @@ func (frame *RTUFrame) Bytes() []byte {
 	binary.LittleEndian.PutUint16(bytes[pLen:pLen+2], crc)
 
 	return bytes
+}
+
+func (f *RTUFrame) GetSlaveId() uint8 {
+	return f.SlaveId
 }
 
 // GetFunction returns the Modbus function code.

@@ -11,36 +11,35 @@ import (
 )
 
 // Server is a Modbus slave with allocated memory for discrete inputs, coils, etc.
-type Server struct {
-	// Debug enables more verbose messaging.
-	Debug            bool
-	listeners        []net.Listener
-	ports            []serial.Port
-	portsWG          sync.WaitGroup
-	portsCloseChan   chan struct{}
-	requestChan      chan *Request
-	function         [256](func(*Server, Framer) ([]byte, *Exception))
-	DiscreteInputs   []byte
-	Coils            []byte
-	HoldingRegisters []uint16
-	InputRegisters   []uint16
-}
-
-// Request contains the connection and Modbus frame.
-type Request struct {
-	conn  io.ReadWriteCloser
-	frame Framer
-}
+type (
+	SlaveData struct {
+		Coils            []byte
+		DiscreteInputs   []byte
+		HoldingRegisters []uint16
+		InputRegisters   []uint16
+	}
+	// Request contains the connection and Modbus frame.
+	Request struct {
+		conn  io.ReadWriteCloser
+		frame Framer
+	}
+	Server struct {
+		// Debug enables more verbose messaging.
+		Debug          bool
+		listeners      []net.Listener
+		ports          []serial.Port
+		portsWG        sync.WaitGroup
+		portsCloseChan chan struct{}
+		requestChan    chan *Request
+		function       [256](func(*Server, Framer) ([]byte, *Exception))
+		Slaves         map[uint8]SlaveData
+	}
+)
 
 // NewServer creates a new Modbus server (slave).
 func NewServer() *Server {
 	s := &Server{}
-
-	// Allocate Modbus memory maps.
-	s.DiscreteInputs = make([]byte, 65536)
-	s.Coils = make([]byte, 65536)
-	s.HoldingRegisters = make([]uint16, 65536)
-	s.InputRegisters = make([]uint16, 65536)
+	s.Slaves = make(map[uint8]SlaveData)
 
 	// Add default functions.
 	s.function[1] = ReadCoils
@@ -98,6 +97,15 @@ func (s *Server) handler() {
 	}
 }
 
+func (s *Server) InitSlave(id uint8) {
+	if _, ok := s.Slaves[id]; !ok {
+		return
+	}
+	slave := SlaveData{}
+	slave.AllocateMemory()
+	s.Slaves[id] = slave
+}
+
 // Close stops listening to TCP/IP ports and closes serial ports.
 func (s *Server) Close() {
 	for _, listen := range s.listeners {
@@ -110,4 +118,11 @@ func (s *Server) Close() {
 	for _, port := range s.ports {
 		port.Close()
 	}
+}
+
+func (sD *SlaveData) AllocateMemory() {
+	sD.DiscreteInputs = make([]byte, 65536)
+	sD.Coils = make([]byte, 65536)
+	sD.HoldingRegisters = make([]uint16, 65536)
+	sD.InputRegisters = make([]uint16, 65536)
 }
