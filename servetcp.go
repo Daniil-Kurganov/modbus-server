@@ -21,6 +21,7 @@ func (s *Server) accept(listen net.Listener) error {
 			return err
 		}
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
+		s.connectionChanel <- conn
 		go func(conn net.Conn) {
 			defer conn.Close()
 

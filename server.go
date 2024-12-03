@@ -25,14 +25,15 @@ type (
 	}
 	Server struct {
 		// Debug enables more verbose messaging.
-		Debug          bool
-		listeners      []net.Listener
-		ports          []serial.Port
-		portsWG        sync.WaitGroup
-		portsCloseChan chan struct{}
-		requestChan    chan *Request
-		function       [256](func(*Server, Framer) ([]byte, *Exception))
-		Slaves         map[uint8]SlaveData
+		Debug            bool
+		listeners        []net.Listener
+		ports            []serial.Port
+		portsWG          sync.WaitGroup
+		portsCloseChan   chan struct{}
+		requestChan      chan *Request
+		connectionChanel chan net.Conn
+		function         [256](func(*Server, Framer) ([]byte, *Exception))
+		Slaves           map[uint8]SlaveData
 	}
 )
 
@@ -53,6 +54,7 @@ func NewServer() *Server {
 
 	s.requestChan = make(chan *Request)
 	s.portsCloseChan = make(chan struct{})
+	s.connectionChanel = make(chan net.Conn)
 
 	go s.handler()
 
