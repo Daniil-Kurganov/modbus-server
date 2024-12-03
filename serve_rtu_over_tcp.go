@@ -39,9 +39,10 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					log.Printf("bad packet error %v\n", err)
 					return
 				}
-				request := &Request{conn, frame}
-
-				s.requestChan <- request
+				if _, ok := s.Slaves[frame.GetSlaveId()]; ok {
+					request := &Request{conn, frame}
+					s.requestChan <- request
+				}
 			}
 		}(conn)
 	}
