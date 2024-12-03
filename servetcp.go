@@ -44,10 +44,10 @@ func (s *Server) accept(listen net.Listener) error {
 					return
 				}
 				log.Printf("Current slave ID: %d", frame.GetSlaveId())
-				if _, ok := s.Slaves[frame.GetSlaveId()]; ok {
-					request := &Request{conn, frame}
-					s.requestChan <- request
-				}
+				// if _, ok := s.Slaves[frame.GetSlaveId()]; ok {
+				request := &Request{conn, frame}
+				s.requestChan <- request
+				// }
 			}
 		}(conn)
 	}
