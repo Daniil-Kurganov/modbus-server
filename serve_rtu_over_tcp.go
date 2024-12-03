@@ -10,6 +10,7 @@ import (
 )
 
 func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
+	log.Print("Start acception connections")
 	for {
 		conn, err := listen.Accept()
 		if err != nil {

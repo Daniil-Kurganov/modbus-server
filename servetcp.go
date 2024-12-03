@@ -11,6 +11,7 @@ import (
 )
 
 func (s *Server) accept(listen net.Listener) error {
+	log.Print("Start acception connections")
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -42,6 +43,7 @@ func (s *Server) accept(listen net.Listener) error {
 					log.Printf("bad packet error %v\n", err)
 					return
 				}
+				log.Printf("Current slave ID: %d", frame.GetSlaveId())
 				if _, ok := s.Slaves[frame.GetSlaveId()]; ok {
 					request := &Request{conn, frame}
 					s.requestChan <- request
