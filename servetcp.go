@@ -22,9 +22,7 @@ func (s *Server) accept(listen net.Listener) error {
 			return err
 		}
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
-		if _, ok := <-s.ConnectionChanel; ok {
-			s.ConnectionChanel <- &conn
-		}
+		s.ConnectionChanel <- &conn
 		go func(conn net.Conn) {
 			defer conn.Close()
 
