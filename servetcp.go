@@ -12,6 +12,7 @@ import (
 
 func (s *Server) accept(listen net.Listener) error {
 	log.Print("Start acception connections")
+	isFirstClient := true
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -22,7 +23,10 @@ func (s *Server) accept(listen net.Listener) error {
 			return err
 		}
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
-		s.ConnectionChanel <- &conn
+		if isFirstClient {
+			s.ConnectionChanel <- &conn
+			isFirstClient = false
+		}
 		go func(conn net.Conn) {
 			defer conn.Close()
 
