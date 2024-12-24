@@ -55,6 +55,7 @@ func NewServer() *Server {
 	s.requestChan = make(chan *Request)
 	s.portsCloseChan = make(chan struct{})
 	s.ConnectionChanel = make(chan *net.Conn)
+	s.ConnectionChanel <- new(net.Conn)
 
 	go s.handler()
 
