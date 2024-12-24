@@ -24,7 +24,9 @@ func (s *Server) accept(listen net.Listener) error {
 		}
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
-			s.ConnectionChanel <- &conn
+			if _, ok := <-s.ConnectionChanel; ok {
+				s.ConnectionChanel <- &conn
+			}
 			isFirstClient = false
 		}
 		go func(conn net.Conn) {
