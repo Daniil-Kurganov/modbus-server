@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/goburrow/serial"
+	"golang.org/x/exp/maps"
 )
 
 // Server is a Modbus slave with allocated memory for discrete inputs, coils, etc.
@@ -113,7 +114,7 @@ func (s *Server) InitSlave(id uint8) {
 
 func (s *Server) SlaveStopResponse(id uint8) (err error) {
 	if _, ok := s.Slaves[id]; !ok {
-		err = fmt.Errorf("slave with %d ID didn't implemented on server", id)
+		err = fmt.Errorf("slave with %d ID didn't implemented on server (must be in %v)", id, maps.Keys(s.Slaves))
 		return
 	}
 	if slices.Contains(s.SlavesStoppedResponse, id) {
@@ -125,13 +126,14 @@ func (s *Server) SlaveStopResponse(id uint8) (err error) {
 
 func (s *Server) SlaveStartResponse(id uint8) (err error) {
 	if _, ok := s.Slaves[id]; !ok {
-		err = fmt.Errorf("slave with %d ID didn't implemented on server", id)
+		err = fmt.Errorf("slave with %d ID didn't implemented on server (must be in %v)", id, maps.Keys(s.Slaves))
 		return
 	}
 	if !slices.Contains(s.SlavesStoppedResponse, id) {
 		return
 	}
-	s.SlavesStoppedResponse = append(s.SlavesStoppedResponse[:id], s.SlavesStoppedResponse[id+1:]...)
+	removeIndex := slices.Index(s.SlavesStoppedResponse, id)
+	s.SlavesStoppedResponse = append(s.SlavesStoppedResponse[:removeIndex], s.SlavesStoppedResponse[removeIndex+1:]...)
 	return
 }
 
