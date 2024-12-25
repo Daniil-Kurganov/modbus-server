@@ -2,9 +2,11 @@
 package modbusserver
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"slices"
 	"sync"
 
 	"github.com/goburrow/serial"
@@ -25,15 +27,16 @@ type (
 	}
 	Server struct {
 		// Debug enables more verbose messaging.
-		Debug            bool
-		listeners        []net.Listener
-		ports            []serial.Port
-		portsWG          sync.WaitGroup
-		portsCloseChan   chan struct{}
-		requestChan      chan *Request
-		ConnectionChanel chan *net.Conn
-		function         [256](func(*Server, Framer) ([]byte, *Exception))
-		Slaves           map[uint8]SlaveData
+		Debug                 bool
+		listeners             []net.Listener
+		ports                 []serial.Port
+		portsWG               sync.WaitGroup
+		portsCloseChan        chan struct{}
+		requestChan           chan *Request
+		ConnectionChanel      chan *net.Conn
+		function              [256](func(*Server, Framer) ([]byte, *Exception))
+		Slaves                map[uint8]SlaveData
+		SlavesStoppedResponse []uint8
 	}
 )
 
@@ -106,6 +109,30 @@ func (s *Server) InitSlave(id uint8) {
 	slave := SlaveData{}
 	slave.AllocateMemory()
 	s.Slaves[id] = slave
+}
+
+func (s *Server) SlaveStopResponse(id uint8) (err error) {
+	if _, ok := s.Slaves[id]; !ok {
+		err = fmt.Errorf("slave with %d ID didn't implemented on server", id)
+		return
+	}
+	if slices.Contains(s.SlavesStoppedResponse, id) {
+		return
+	}
+	s.SlavesStoppedResponse = append(s.SlavesStoppedResponse, id)
+	return
+}
+
+func (s *Server) SlaveStartResponse(id uint8) (err error) {
+	if _, ok := s.Slaves[id]; !ok {
+		err = fmt.Errorf("slave with %d ID didn't implemented on server", id)
+		return
+	}
+	if !slices.Contains(s.SlavesStoppedResponse, id) {
+		return
+	}
+	s.SlavesStoppedResponse = append(s.SlavesStoppedResponse[:id], s.SlavesStoppedResponse[id+1:]...)
+	return
 }
 
 // Close stops listening to TCP/IP ports and closes serial ports.

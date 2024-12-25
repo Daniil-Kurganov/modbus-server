@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"slices"
 	"strings"
 
 	reuse "github.com/libp2p/go-reuseport"
@@ -46,7 +47,8 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					log.Printf("bad packet error %v\n", err)
 					return
 				}
-				if _, ok := s.Slaves[frame.GetSlaveId()]; ok {
+				slaveID := frame.GetSlaveId()
+				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
 					request := &Request{conn, frame}
 					s.requestChan <- request
 				}
