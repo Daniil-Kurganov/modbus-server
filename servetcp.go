@@ -54,6 +54,9 @@ func (s *Server) accept(listen net.Listener) error {
 				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
 					request := &Request{conn, frame}
 					s.requestChan <- request
+				} else {
+					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
+					return
 				}
 			}
 		}(conn)
