@@ -142,7 +142,7 @@ func (s *Server) Close() {
 	for _, listen := range s.listeners {
 		listen.Close()
 	}
-	close(s.ConnectionChanel)
+	// close(s.ConnectionChanel)
 	close(s.portsCloseChan)
 	s.portsWG.Wait()
 
