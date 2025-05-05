@@ -56,7 +56,7 @@ func (s *Server) accept(listen net.Listener) error {
 					s.requestChan <- request
 				} else {
 					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
-					return
+					// return
 				}
 			}
 		}(conn)
