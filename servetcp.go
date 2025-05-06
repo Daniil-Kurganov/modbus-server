@@ -1,6 +1,7 @@
 package modbusserver
 
 import (
+	"bufio"
 	"crypto/tls"
 	"io"
 	"log"
@@ -38,9 +39,11 @@ func (s *Server) accept(listen net.Listener) error {
 			isFirstClient = false
 		}
 		go func(conn net.Conn) {
+			reader := bufio.NewReader(conn)
 			for {
 				packet := make([]byte, 512)
-				bytesRead, err := conn.Read(packet)
+				// bytesRead, err := conn.Read(packet)
+				bytesRead, err := reader.Read(packet)
 				if err != nil {
 					if strings.Contains(err.Error(), "use of closed network connection") {
 						conn.Close()
