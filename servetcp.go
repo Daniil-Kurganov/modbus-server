@@ -7,6 +7,7 @@ import (
 	"net"
 	"slices"
 	"strings"
+	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
 )
@@ -27,7 +28,12 @@ func (s *Server) accept(listen net.Listener) error {
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
-				s.ConnectionChanel <- true
+				timer := time.After(500 * time.Millisecond)
+				select {
+				case s.ConnectionChanel <- true:
+				case <-timer:
+				}
+
 			}
 			isFirstClient = false
 		}
