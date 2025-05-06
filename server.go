@@ -34,7 +34,7 @@ type (
 		portsWG               sync.WaitGroup
 		portsCloseChan        chan struct{}
 		requestChan           chan *Request
-		ConnectionChanel      chan *net.Conn
+		ConnectionChanel      chan bool
 		function              [256](func(*Server, Framer) ([]byte, *Exception))
 		Slaves                map[uint8]SlaveData
 		SlavesStoppedResponse []uint8
@@ -58,7 +58,7 @@ func NewServer() *Server {
 
 	s.requestChan = make(chan *Request)
 	s.portsCloseChan = make(chan struct{})
-	s.ConnectionChanel = make(chan *net.Conn)
+	s.ConnectionChanel = make(chan bool)
 
 	go s.handler()
 

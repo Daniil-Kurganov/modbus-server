@@ -25,7 +25,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
-				s.ConnectionChanel <- &conn
+				s.ConnectionChanel <- true
 			}
 			isFirstClient = false
 		}
