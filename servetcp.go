@@ -37,11 +37,12 @@ func (s *Server) accept(listen net.Listener) error {
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
 				if err != nil {
-					if err != io.EOF {
-						log.Printf("read error %v\n", err)
+					if err == io.EOF {
+						conn.Close()
+						return
 					}
+					log.Printf("read error %v\n", err)
 					continue
-					// return
 				}
 				// Set the length of the packet to the number of read bytes.
 				packet = packet[:bytesRead]
@@ -50,7 +51,6 @@ func (s *Server) accept(listen net.Listener) error {
 				if err != nil {
 					log.Printf("bad packet error %v\n", err)
 					continue
-					//return
 				}
 				slaveID := frame.GetSlaveId()
 				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
@@ -58,7 +58,6 @@ func (s *Server) accept(listen net.Listener) error {
 					s.requestChan <- request
 				} else {
 					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
-					// return
 				}
 			}
 		}(conn)
