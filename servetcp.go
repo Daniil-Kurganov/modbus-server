@@ -2,6 +2,7 @@ package modbusserver
 
 import (
 	"crypto/tls"
+	"io"
 	"log"
 	"net"
 	"slices"
@@ -38,8 +39,9 @@ func (s *Server) accept(listen net.Listener) error {
 					if strings.Contains(err.Error(), "use of closed network connection") {
 						conn.Close()
 						return
+					} else if err != io.EOF {
+						log.Printf("read error %v\n", err)
 					}
-					log.Printf("read error %v\n", err)
 					continue
 				}
 				// Set the length of the packet to the number of read bytes.
