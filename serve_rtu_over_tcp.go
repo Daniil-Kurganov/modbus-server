@@ -1,7 +1,6 @@
 package modbusserver
 
 import (
-	"io"
 	"log"
 	"net"
 	"slices"
@@ -36,18 +35,18 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 				bytesRead, err := conn.Read(packet)
 				log.Printf("Current bytes read: %d", bytesRead)
 				if err != nil {
-					if err != io.EOF {
-						log.Printf("read error %v\n", err)
+					if strings.Contains(err.Error(), "use of closed network connection") {
+						conn.Close()
+						return
 					}
+					log.Printf("read error %v\n", err)
 					continue
-					// return
 				}
 				packet = packet[:bytesRead]
 				frame, err := NewRTUFrame(packet)
 				if err != nil {
 					log.Printf("bad packet error %v\n", err)
 					continue
-					// return
 				}
 				slaveID := frame.GetSlaveId()
 				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
@@ -55,7 +54,6 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					s.requestChan <- request
 				} else {
 					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
-					// return
 				}
 			}
 		}(conn)

@@ -2,7 +2,6 @@ package modbusserver
 
 import (
 	"crypto/tls"
-	"io"
 	"log"
 	"net"
 	"slices"
@@ -32,12 +31,11 @@ func (s *Server) accept(listen net.Listener) error {
 			isFirstClient = false
 		}
 		go func(conn net.Conn) {
-
 			for {
 				packet := make([]byte, 512)
 				bytesRead, err := conn.Read(packet)
 				if err != nil {
-					if err == io.EOF {
+					if strings.Contains(err.Error(), "use of closed network connection") {
 						conn.Close()
 						return
 					}
