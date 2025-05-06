@@ -23,6 +23,7 @@ func (s *Server) accept(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
+		defer conn.Close()
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
@@ -31,7 +32,6 @@ func (s *Server) accept(listen net.Listener) error {
 			isFirstClient = false
 		}
 		go func(conn net.Conn) {
-			defer conn.Close()
 
 			for {
 				packet := make([]byte, 512)
