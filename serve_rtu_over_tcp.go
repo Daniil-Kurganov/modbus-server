@@ -1,6 +1,7 @@
 package modbusserver
 
 import (
+	"bufio"
 	"io"
 	"log"
 	"net"
@@ -22,6 +23,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
+		defer conn.Close()
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
@@ -30,11 +32,11 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			isFirstClient = false
 		}
 		go func(conn net.Conn) {
-			defer conn.Close()
+			reader := bufio.NewReader(conn)
 			for {
 				packet := make([]byte, 512)
-				bytesRead, err := conn.Read(packet)
-				log.Printf("Current bytes read: %d", bytesRead)
+				// bytesRead, err := conn.Read(packet)
+				bytesRead, err := reader.Read(packet)
 				if err != nil {
 					if strings.Contains(err.Error(), "use of closed network connection") {
 						conn.Close()
