@@ -39,13 +39,15 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					if err != io.EOF {
 						log.Printf("read error %v\n", err)
 					}
-					return
+					continue
+					// return
 				}
 				packet = packet[:bytesRead]
 				frame, err := NewRTUFrame(packet)
 				if err != nil {
 					log.Printf("bad packet error %v\n", err)
-					return
+					continue
+					// return
 				}
 				slaveID := frame.GetSlaveId()
 				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
@@ -53,7 +55,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 					s.requestChan <- request
 				} else {
 					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
-					return
+					// return
 				}
 			}
 		}(conn)

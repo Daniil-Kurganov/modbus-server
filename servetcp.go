@@ -40,7 +40,8 @@ func (s *Server) accept(listen net.Listener) error {
 					if err != io.EOF {
 						log.Printf("read error %v\n", err)
 					}
-					return
+					continue
+					// return
 				}
 				// Set the length of the packet to the number of read bytes.
 				packet = packet[:bytesRead]
@@ -48,7 +49,8 @@ func (s *Server) accept(listen net.Listener) error {
 				frame, err := NewTCPFrame(packet)
 				if err != nil {
 					log.Printf("bad packet error %v\n", err)
-					return
+					continue
+					//return
 				}
 				slaveID := frame.GetSlaveId()
 				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
