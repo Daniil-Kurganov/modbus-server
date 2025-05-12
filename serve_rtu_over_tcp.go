@@ -23,7 +23,6 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
-		defer conn.Close()
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
@@ -31,36 +30,33 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			}
 			isFirstClient = false
 		}
-		go func(conn net.Conn) {
-			reader := bufio.NewReader(conn)
-			for {
-				packet := make([]byte, 512)
-				// bytesRead, err := conn.Read(packet)
-				bytesRead, err := reader.Read(packet)
-				if err != nil {
-					if strings.Contains(err.Error(), "use of closed network connection") {
-						conn.Close()
-						return
-					} else if err != io.EOF {
-						log.Printf("read error %v\n", err)
-					}
-					continue
+		reader := bufio.NewReader(conn)
+		for {
+			packet := make([]byte, 512)
+			bytesRead, err := reader.Read(packet)
+			if err != nil {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					break
+				} else if err != io.EOF {
+					log.Printf("read error %v\n", err)
 				}
-				packet = packet[:bytesRead]
-				frame, err := NewRTUFrame(packet)
-				if err != nil {
-					log.Printf("bad packet error %v\n", err)
-					continue
-				}
-				slaveID := frame.GetSlaveId()
-				if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
-					request := &Request{conn, frame}
-					s.requestChan <- request
-				} else {
-					log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
-				}
+				continue
 			}
-		}(conn)
+			packet = packet[:bytesRead]
+			frame, err := NewRTUFrame(packet)
+			if err != nil {
+				log.Printf("bad packet error %v\n", err)
+				continue
+			}
+			slaveID := frame.GetSlaveId()
+			if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
+				request := &Request{conn, frame}
+				s.requestChan <- request
+			} else {
+				log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
+			}
+		}
+		conn.Close()
 	}
 }
 
