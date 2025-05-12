@@ -8,6 +8,7 @@ import (
 	"net"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/goburrow/serial"
 	"golang.org/x/exp/maps"
@@ -95,11 +96,12 @@ func (s *Server) handle(request *Request) Framer {
 func (s *Server) handler() {
 	for {
 		request := <-s.requestChan
-		log.Printf("Current request: %v", request)
+		log.Printf("-- %s (%s): current request: %v", s.listeners[0].Addr().String(), time.Now().String(), request)
 		response := s.handle(request)
 		if _, err := request.conn.Write(response.Bytes()); err != nil {
-			log.Printf("Error on writting request: %s", err)
+			log.Printf("-- %s (%s): error on writting response: %s", s.listeners[0].Addr().String(), time.Now().String(), err.Error())
 		}
+		log.Printf("-- %s (%s): current response successfully sended: %v", s.listeners[0].Addr().String(), time.Now().String(), response)
 	}
 }
 
