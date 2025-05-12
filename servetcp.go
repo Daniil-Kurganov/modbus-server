@@ -28,18 +28,15 @@ func (s *Server) accept(listen net.Listener) error {
 		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
-				timer := time.After(500 * time.Millisecond)
-				select {
-				case s.ConnectionChanel <- true:
-				case <-timer:
-				}
-
+				s.ConnectionChanel <- true
 			}
 			isFirstClient = false
+			log.Printf("--%s (%s): connection now isn't first client--", conn.LocalAddr().String(), time.Now().String())
 		}
 		reader := bufio.NewReader(conn)
 		for {
 			packet := make([]byte, 512)
+			log.Printf("--%s (%s): current packet reading--", conn.LocalAddr().String(), time.Now().String())
 			bytesRead, err := reader.Read(packet)
 			if err != nil {
 				if strings.Contains(err.Error(), "use of closed network connection") {
@@ -47,21 +44,25 @@ func (s *Server) accept(listen net.Listener) error {
 				} else if err != io.EOF {
 					log.Printf("read error %v\n", err)
 				}
+				log.Printf("--%s (%s): current packet reading  error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 				continue
 			}
-			// Set the length of the packet to the number of read bytes.
+			log.Printf("--%s (%s): current packet successfully received--", conn.LocalAddr().String(), time.Now().String())
 			packet = packet[:bytesRead]
+			log.Printf("--%s (%s): current packet preparing--", conn.LocalAddr().String(), time.Now().String())
 			frame, err := NewTCPFrame(packet)
 			if err != nil {
-				log.Printf("bad packet error %v\n", err)
+				log.Printf("--%s (%s): current packet preparing error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 				continue
 			}
 			slaveID := frame.GetSlaveId()
+			log.Printf("--%s (%s): current packet successfully prepared: slave Id = %d--", conn.LocalAddr().String(), time.Now().String(), slaveID)
 			if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
 				request := &Request{conn, frame}
+				log.Printf("--%s (%s): current request successfully starts procesing--", conn.LocalAddr().String(), time.Now().String())
 				s.requestChan <- request
 			} else {
-				log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
+				log.Printf("--%s (%s): invalid slave Id: requested slave Id doesn't initialized or disabled--", conn.LocalAddr().String(), time.Now().String())
 			}
 		}
 		conn.Close()

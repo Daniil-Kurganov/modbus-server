@@ -7,6 +7,7 @@ import (
 	"net"
 	"slices"
 	"strings"
+	"time"
 
 	reuse "github.com/libp2p/go-reuseport"
 )
@@ -29,10 +30,12 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 				s.ConnectionChanel <- true
 			}
 			isFirstClient = false
+			log.Printf("--%s (%s): connection now isn't first client--", conn.LocalAddr().String(), time.Now().String())
 		}
 		reader := bufio.NewReader(conn)
 		for {
 			packet := make([]byte, 512)
+			log.Printf("--%s (%s): current packet reading--", conn.LocalAddr().String(), time.Now().String())
 			bytesRead, err := reader.Read(packet)
 			if err != nil {
 				if strings.Contains(err.Error(), "use of closed network connection") {
@@ -40,20 +43,25 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 				} else if err != io.EOF {
 					log.Printf("read error %v\n", err)
 				}
+				log.Printf("--%s (%s): current packet reading  error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 				continue
 			}
+			log.Printf("--%s (%s): current packet successfully received--", conn.LocalAddr().String(), time.Now().String())
 			packet = packet[:bytesRead]
+			log.Printf("--%s (%s): current packet preparing--", conn.LocalAddr().String(), time.Now().String())
 			frame, err := NewRTUFrame(packet)
 			if err != nil {
-				log.Printf("bad packet error %v\n", err)
+				log.Printf("--%s (%s): current packet preparing error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 				continue
 			}
 			slaveID := frame.GetSlaveId()
+			log.Printf("--%s (%s): current packet successfully prepared: slave Id = %d--", conn.LocalAddr().String(), time.Now().String(), slaveID)
 			if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
 				request := &Request{conn, frame}
+				log.Printf("--%s (%s): current request successfully starts procesing--", conn.LocalAddr().String(), time.Now().String())
 				s.requestChan <- request
 			} else {
-				log.Print("invalid slave Id: requested slave Id doesn't initialized or disabled")
+				log.Printf("--%s (%s): invalid slave Id: requested slave Id doesn't initialized or disabled--", conn.LocalAddr().String(), time.Now().String())
 			}
 		}
 		conn.Close()
