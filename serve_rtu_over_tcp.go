@@ -13,7 +13,7 @@ import (
 )
 
 func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
-	log.Print("Start acception connections")
+	log.Printf("--%s (%s): start accepting connections--", listen.Addr().String(), time.Now().String())
 	isFirstClient := true
 	for {
 		conn, err := listen.Accept()
@@ -24,7 +24,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
-		log.Printf("New connection: type - %s, address - %s", conn.RemoteAddr().Network(), conn.RemoteAddr().String())
+		log.Printf("-- %s (%s): new connection: type - %s, address - %s", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			if s.ConnectionChanel != nil {
 				s.ConnectionChanel <- true
