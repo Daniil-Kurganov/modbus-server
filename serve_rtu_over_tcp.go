@@ -66,6 +66,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			}
 		}
 		conn.Close()
+		log.Printf("--%s (%s): close connection %s--", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().String())
 	}
 }
 

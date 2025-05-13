@@ -25,7 +25,7 @@ func (s *Server) accept(listen net.Listener) error {
 			log.Printf("Unable to accept connections: %#v\n", err)
 			return err
 		}
-		log.Printf("-- %s (%s): new connection: type - %s, address - %s", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().Network(), conn.RemoteAddr().String())
+		log.Printf("--%s (%s): new connection: type - %s, address - %s", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().Network(), conn.RemoteAddr().String())
 		if isFirstClient {
 			log.Printf("--%s (%s): connection now is first client--", conn.LocalAddr().String(), time.Now().String())
 			if s.ConnectionChanel != nil {
