@@ -29,7 +29,10 @@ func (s *Server) accept(listen net.Listener) error {
 		if isFirstClient {
 			log.Printf("--%s (%s): connection now is first client--", conn.LocalAddr().String(), time.Now().String())
 			if s.ConnectionChanel != nil {
-				s.ConnectionChanel <- true
+				select {
+				case <-time.After(50 * time.Millisecond):
+				case s.ConnectionChanel <- true:
+				}
 			}
 			isFirstClient = false
 			log.Printf("--%s (%s): connection now isn't first client--", conn.LocalAddr().String(), time.Now().String())
