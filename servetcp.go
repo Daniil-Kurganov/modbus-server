@@ -40,10 +40,9 @@ func (s *Server) accept(listen net.Listener) error {
 			log.Printf("--%s (%s): current packet reading--", conn.LocalAddr().String(), time.Now().String())
 			bytesRead, err := reader.Read(packet)
 			if err != nil {
-				if strings.Contains(err.Error(), "use of closed network connection") {
+				if strings.Contains(err.Error(), "use of closed network connection") || err == io.EOF {
+					log.Printf("--%s (%s): current packet reading  error: %s; breaking connection--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 					break
-				} else if err != io.EOF {
-					log.Printf("read error %v\n", err)
 				}
 				log.Printf("--%s (%s): current packet reading  error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
 				continue
@@ -67,6 +66,7 @@ func (s *Server) accept(listen net.Listener) error {
 			}
 		}
 		conn.Close()
+		log.Printf("--%s (%s): close connection %s--", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().String())
 	}
 }
 
