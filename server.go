@@ -4,11 +4,10 @@ package modbusserver
 import (
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net"
 	"slices"
 	"sync"
-	"time"
 
 	"github.com/goburrow/serial"
 	"golang.org/x/exp/maps"
@@ -39,11 +38,12 @@ type (
 		function              [256](func(*Server, Framer) ([]byte, *Exception))
 		Slaves                map[uint8]SlaveData
 		SlavesStoppedResponse []uint8
+		logger                slog.Logger
 	}
 )
 
 // NewServer creates a new Modbus server (slave).
-func NewServer() *Server {
+func NewServer(logger slog.Logger) *Server {
 	s := &Server{}
 	s.Slaves = make(map[uint8]SlaveData)
 
@@ -60,7 +60,7 @@ func NewServer() *Server {
 	s.requestChan = make(chan *Request)
 	s.portsCloseChan = make(chan struct{})
 	s.ConnectionChanel = make(chan bool)
-
+	s.logger = logger
 	go s.handler()
 
 	return s
@@ -88,7 +88,7 @@ func (s *Server) handle(request *Request) Framer {
 	if exception != &Success {
 		response.SetException(exception)
 	}
-	log.Printf("Current response: %v", response)
+	s.logger.Debug(fmt.Sprintf("Server %s: current response: %v", s.listeners[0].Addr().String(), response))
 	return response
 }
 
@@ -96,12 +96,12 @@ func (s *Server) handle(request *Request) Framer {
 func (s *Server) handler() {
 	for {
 		request := <-s.requestChan
-		log.Printf("-- %s (%s): current request: %v", s.listeners[0].Addr().String(), time.Now().String(), request)
+		s.logger.Debug(fmt.Sprintf("Server %s: current request: %v", s.listeners[0].Addr().String(), request))
 		response := s.handle(request)
 		if _, err := request.conn.Write(response.Bytes()); err != nil {
-			log.Printf("-- %s (%s): error on writting response: %s", s.listeners[0].Addr().String(), time.Now().String(), err.Error())
+			s.logger.Error(fmt.Sprintf("Server %s: error on writting response: %s", s.listeners[0].Addr().String(), err.Error()))
 		}
-		log.Printf("-- %s (%s): current response successfully sended: %v", s.listeners[0].Addr().String(), time.Now().String(), response)
+		s.logger.Debug(fmt.Sprintf("Server %s: current response successfully sended: %v", s.listeners[0].Addr().String(), response))
 	}
 }
 

@@ -2,8 +2,8 @@ package modbusserver
 
 import (
 	"bufio"
+	"fmt"
 	"io"
-	"log"
 	"net"
 	"slices"
 	"strings"
@@ -13,7 +13,7 @@ import (
 )
 
 func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
-	log.Printf("--%s (%s): start accepting connections--", listen.Addr().String(), time.Now().String())
+	s.logger.Debug(fmt.Sprintf("Server %s: start accepting connections", listen.Addr().String()))
 	isFirstClient := true
 	for {
 		conn, err := listen.Accept()
@@ -21,12 +21,13 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				return nil
 			}
-			log.Printf("Unable to accept connections: %#v\n", err)
+			s.logger.Info(fmt.Sprintf("Server %s: unable to accept connections: %s", s.listeners[0].Addr().String(), err.Error()))
 			return err
 		}
-		log.Printf("-- %s (%s): new connection: type - %s, address - %s", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().Network(), conn.RemoteAddr().String())
+		s.logger.Debug(fmt.Sprintf("Server %s: new connection: type - %s, address - %s",
+			conn.LocalAddr().String(), conn.RemoteAddr().Network(), conn.RemoteAddr().String()))
 		if isFirstClient {
-			log.Printf("--%s (%s): connection now is first client--", conn.LocalAddr().String(), time.Now().String())
+			s.logger.Debug(fmt.Sprintf("Server %s: connection now is first client", conn.LocalAddr().String()))
 			if s.ConnectionChanel != nil {
 				select {
 				case <-time.After(50 * time.Millisecond):
@@ -34,48 +35,48 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 				}
 			}
 			isFirstClient = false
-			log.Printf("--%s (%s): connection now isn't first client--", conn.LocalAddr().String(), time.Now().String())
+			s.logger.Debug(fmt.Sprintf("Server %s: connection now isn't first client", conn.LocalAddr().String()))
 		}
 		reader := bufio.NewReader(conn)
 		for {
 			packet := make([]byte, 512)
-			log.Printf("--%s (%s): current packet reading--", conn.LocalAddr().String(), time.Now().String())
+			s.logger.Debug(fmt.Sprintf("Server %s: current packet reading", conn.LocalAddr().String()))
 			bytesRead, err := reader.Read(packet)
 			if err != nil {
 				if strings.Contains(err.Error(), "use of closed network connection") || err == io.EOF {
-					log.Printf("--%s (%s): current packet reading  error: %s; breaking connection--", conn.LocalAddr().String(), time.Now().String(), err.Error())
+					s.logger.Error(fmt.Sprintf("Server %s: current packet reading  error: %s; breaking connection", conn.LocalAddr().String(), err.Error()))
 					break
 				}
-				log.Printf("--%s (%s): current packet reading  error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
+				s.logger.Error(fmt.Sprintf("Server %s: current packet reading error: %s", conn.LocalAddr().String(), err.Error()))
 				continue
 			}
-			log.Printf("--%s (%s): current packet successfully received--", conn.LocalAddr().String(), time.Now().String())
+			s.logger.Debug(fmt.Sprintf("Server %s: current packet successfully received", conn.LocalAddr().String()))
 			packet = packet[:bytesRead]
-			log.Printf("--%s (%s): current packet preparing--", conn.LocalAddr().String(), time.Now().String())
+			s.logger.Debug(fmt.Sprintf("Server %s: current packet preparing", conn.LocalAddr().String()))
 			frame, err := NewRTUFrame(packet)
 			if err != nil {
-				log.Printf("--%s (%s): current packet preparing error: %s--", conn.LocalAddr().String(), time.Now().String(), err.Error())
+				s.logger.Error(fmt.Sprintf("Server %s: current packet preparing error: %s", conn.LocalAddr().String(), err.Error()))
 				continue
 			}
 			slaveID := frame.GetSlaveId()
-			log.Printf("--%s (%s): current packet successfully prepared: slave Id = %d--", conn.LocalAddr().String(), time.Now().String(), slaveID)
+			s.logger.Debug(fmt.Sprintf("Server %s: current packet successfully prepared: slave Id = %d", conn.LocalAddr().String(), slaveID))
 			if _, ok := s.Slaves[slaveID]; ok && !slices.Contains(s.SlavesStoppedResponse, slaveID) {
 				request := &Request{conn, frame}
-				log.Printf("--%s (%s): current request successfully starts procesing--", conn.LocalAddr().String(), time.Now().String())
+				s.logger.Debug(fmt.Sprintf("Server %s: current request successfully starts procesing", conn.LocalAddr().String()))
 				s.requestChan <- request
 			} else {
-				log.Printf("--%s (%s): invalid slave Id: requested slave Id doesn't initialized or disabled--", conn.LocalAddr().String(), time.Now().String())
+				s.logger.Warn(fmt.Sprintf("Server %s: invalid slave Id: requested slave Id doesn't initialized or disabled", conn.LocalAddr().String()))
 			}
 		}
 		conn.Close()
-		log.Printf("--%s (%s): close connection %s--", conn.LocalAddr().String(), time.Now().String(), conn.RemoteAddr().String())
+		s.logger.Info(fmt.Sprintf("Server %s: close connection %s", conn.LocalAddr().String(), conn.RemoteAddr().String()))
 	}
 }
 
 func (s *Server) ListenRTUOverTCP(addressPort string) (err error) {
 	listen, err := reuse.Listen("tcp", addressPort)
 	if err != nil {
-		log.Printf("Failed to Listen: %v\n", err)
+		s.logger.Error(fmt.Sprintf("Server %s: Failed to Listen: %s", s.listeners[0].Addr().String(), err.Error()))
 		return err
 	}
 	s.listeners = append(s.listeners, listen)

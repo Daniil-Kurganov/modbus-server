@@ -2,21 +2,19 @@ package modbusserver
 
 import (
 	"encoding/json"
+	"log/slog"
 	"testing"
 )
 
 func isEqual(a interface{}, b interface{}) bool {
 	expect, _ := json.Marshal(a)
 	got, _ := json.Marshal(b)
-	if string(expect) != string(got) {
-		return false
-	}
-	return true
+	return string(expect) != string(got)
 }
 
 // Function 1
 func TestReadCoils(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	// Set the coil values
 	s.Slaves[255].Coils[10] = 1
@@ -51,7 +49,7 @@ func TestReadCoils(t *testing.T) {
 
 // Function 2
 func TestReadDiscreteInputs(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 
 	s.Slaves[255].DiscreteInputs[0] = 1
@@ -85,7 +83,7 @@ func TestReadDiscreteInputs(t *testing.T) {
 
 // Function 3
 func TestReadHoldingRegisters(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	s.Slaves[255].HoldingRegisters[100] = 1
 	s.Slaves[255].HoldingRegisters[101] = 2
@@ -116,7 +114,7 @@ func TestReadHoldingRegisters(t *testing.T) {
 
 // Function 4
 func TestReadInputRegisters(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	s.Slaves[255].InputRegisters[200] = 1
 	s.Slaves[255].InputRegisters[201] = 2
@@ -147,7 +145,7 @@ func TestReadInputRegisters(t *testing.T) {
 
 // Function 5
 func TestWriteSingleCoil(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	var frame TCPFrame
 	frame.TransactionIdentifier = 1
@@ -174,7 +172,7 @@ func TestWriteSingleCoil(t *testing.T) {
 
 // Function 6
 func TestWriteHoldingRegister(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	var frame TCPFrame
 	frame.TransactionIdentifier = 1
@@ -201,7 +199,7 @@ func TestWriteHoldingRegister(t *testing.T) {
 
 // Function 15
 func TestWriteMultipleCoils(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	var frame TCPFrame
 	frame.TransactionIdentifier = 1
@@ -228,7 +226,7 @@ func TestWriteMultipleCoils(t *testing.T) {
 
 // Function 16
 func TestWriteHoldingRegisters(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	var frame TCPFrame
 	frame.TransactionIdentifier = 1
@@ -272,7 +270,7 @@ func TestUint16ToBytes(t *testing.T) {
 }
 
 func TestOutOfBounds(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(255)
 	var frame TCPFrame
 	frame.TransactionIdentifier = 1

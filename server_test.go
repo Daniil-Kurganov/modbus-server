@@ -1,6 +1,7 @@
 package modbusserver
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ func TestAduSetDataWithRegisterAndNumberAndValues(t *testing.T) {
 }
 
 func TestUnsupportedFunction(t *testing.T) {
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	var frame TCPFrame
 	frame.Function = 255
 
@@ -45,7 +46,7 @@ func TestUnsupportedFunction(t *testing.T) {
 
 func TestModbus(t *testing.T) {
 	// Server
-	s := NewServer()
+	s := NewServer(slog.Logger{})
 	s.InitSlave(1)
 	err := s.ListenTCP("127.0.0.1:3333")
 	if err != nil {
@@ -68,13 +69,13 @@ func TestModbus(t *testing.T) {
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 	// Coils
-	results, err := client.WriteMultipleCoils(100, 9, []byte{255, 1})
+	_, err = client.WriteMultipleCoils(100, 9, []byte{255, 1})
 	if err != nil {
 		t.Errorf("expected nil, got %v\n", err)
 		t.FailNow()
 	}
 
-	results, err = client.ReadCoils(100, 16)
+	results, err := client.ReadCoils(100, 16)
 	if err != nil {
 		t.Errorf("expected nil, got %v\n", err)
 		t.FailNow()
