@@ -76,7 +76,7 @@ func (s *Server) acceptRTUOverTCP(listen net.Listener) error {
 func (s *Server) ListenRTUOverTCP(addressPort string) (err error) {
 	listen, err := reuse.Listen("tcp", addressPort)
 	if err != nil {
-		s.logger.Error(fmt.Sprintf("Server %s: Failed to Listen: %s", s.listeners[0].Addr().String(), err.Error()))
+		s.logger.Error(fmt.Sprintf("Server %s: Failed to Listen: %v", addressPort, err))
 		return err
 	}
 	s.listeners = append(s.listeners, listen)
